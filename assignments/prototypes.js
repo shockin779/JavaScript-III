@@ -16,12 +16,33 @@
   * destroy() // prototype method that returns: `${this.name} was removed from the game.`
 */
 
+function GameObject(attrs) {
+  this.createdAt = attrs.createdAt;
+  this.name = attrs.name;
+  this.dimensions = attrs.dimensions;
+}
+
+GameObject.prototype.destroy = function() {
+  return `${this.name} was removed from the game.`;
+}
+
 /*
   === CharacterStats ===
   * healthPoints
   * takeDamage() // prototype method -> returns the string '<object name> took damage.'
   * should inherit destroy() from GameObject's prototype
 */
+
+function CharacterStats(attrs) {
+  GameObject.call(this, attrs);
+  this.healthPoints = attrs.healthPoints;
+}
+
+CharacterStats.prototype = Object.create(GameObject.prototype);
+
+CharacterStats.prototype.takeDamage = function() {
+  return `${this.name} took damage.`;
+}
 
 /*
   === Humanoid (Having an appearance or character resembling that of a human.) ===
@@ -32,6 +53,19 @@
   * should inherit destroy() from GameObject through CharacterStats
   * should inherit takeDamage() from CharacterStats
 */
+
+function Humanoid(attrs) {
+  CharacterStats.call(this, attrs);
+  this.team = attrs.team;
+  this.weapons = attrs.weapons;
+  this.language = attrs.language;
+}
+
+Humanoid.prototype = Object.create(CharacterStats.prototype);
+
+Humanoid.prototype.greet = function() {
+  return `${this.name} offers a greeting in ${this.language}.`;
+}
  
 /*
   * Inheritance chain: GameObject -> CharacterStats -> Humanoid
@@ -41,7 +75,6 @@
 
 // Test you work by un-commenting these 3 objects and the list of console logs below:
 
-/*
   const mage = new Humanoid({
     createdAt: new Date(),
     dimensions: {
@@ -102,9 +135,95 @@
   console.log(archer.greet()); // Lilith offers a greeting in Elvish.
   console.log(mage.takeDamage()); // Bruce took damage.
   console.log(swordsman.destroy()); // Sir Mustachio was removed from the game.
-*/
+
 
   // Stretch task: 
   // * Create Villain and Hero constructor functions that inherit from the Humanoid constructor function.  
   // * Give the Hero and Villains different methods that could be used to remove health points from objects which could result in destruction if health gets to 0 or drops below 0;
   // * Create two new objects, one a villain and one a hero and fight it out with methods!
+
+
+  Humanoid.prototype.loseHealth = function(damage) {
+    this.healthPoints -= damage;
+    if(this.healthPoints <= 0) {
+      console.log(`${this.name} has been slain and removed from the game`)
+      this.destroy();
+    }
+  }
+
+  //Villain constuctor
+  function Villain (attrs) {
+    Humanoid.call(this, attrs);
+    this.faction = 'Villain';
+  }
+
+  Villain.prototype = Object.create(Humanoid.prototype);
+
+  Villain.prototype.fightHero = function(damage, hero) {
+    hero.healthPoints -= damage;
+    if(hero.healthPoints <= 0) {
+      console.log(`${hero.name} has been slain and removed from the game`)
+      hero.destroy();
+    } else {
+      console.log(`The hero still has ${hero.healthPoints} health remaining.`);
+    }
+  }
+
+  //Hero constuctor
+  function Hero(attrs) {
+    Humanoid.call(this, attrs);
+    this.faction = 'Hero';
+  }
+
+  Hero.prototype = Object.create(Humanoid.prototype);
+
+  Hero.prototype.fightVillain = function(damage, villain) {
+    villain.healthPoints -= damage + 2; //Hero gets a +2 bonus damage against villains.
+    if(villain.healthPoints <= 0) {
+      console.log(`${villain.name} has been slain and removed from the game`)
+      villain.destroy();
+    } else {
+      console.log(`The villain still has ${villain.healthPoints} health remaining.`);
+    }
+  }
+
+  //Make hero and villain
+  const myHero = new Hero({
+    createdAt: new Date(),
+    dimensions: {
+      length: 1,
+      width: 2,
+      height: 4,
+    },
+    healthPoints: 16,
+    name: 'Shockin',
+    team: 'Taco Cats',
+    weapons: [
+      'Shortsword',
+      'Long Bow'
+    ],
+    language: 'Elvish',
+  });
+
+  const villain1 = new Villain({
+    createdAt: new Date(),
+    dimensions: {
+      length: 1,
+      width: 2,
+      height: 4,
+    },
+    healthPoints: 12,
+    name: 'Saruman',
+    team: 'Hellfire Kingdom',
+    weapons: [
+      'Club'
+    ],
+    language: 'Orc',
+  });
+
+  //fight scene
+  myHero.fightVillain(2, villain1);
+  villain1.fightHero(4, myHero);
+  myHero.fightVillain(1, villain1);
+  villain1.fightHero(0, myHero);
+  myHero.fightVillain(7, villain1);
